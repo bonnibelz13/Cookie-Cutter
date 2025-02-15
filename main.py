@@ -3,6 +3,8 @@
 import pygame
 import sys
 import time
+from hand_tracking import HandTracking
+
 
 # กำหนดค่าพื้นฐาน
 WIDTH, HEIGHT = 1200, 600
@@ -20,7 +22,7 @@ pygame.display.set_caption("Cookie Cutter Game")
 
 # ฟอนต์
 font = pygame.font.SysFont("Arial", 40)
-small_font = pygame.font.SysFont("Arial", 30)
+time_font = pygame.font.SysFont("Arial", 60) # font ตัวtext นับถอยหลังในเกม
 
 # ฟังก์ชันสำหรับวาดปุ่ม
 def draw_button(text, x, y, width, height, color, hover_color, border_color):
@@ -39,6 +41,13 @@ def draw_button(text, x, y, width, height, color, hover_color, border_color):
     text_surface = font.render(text, True, FONT_COLOR)
     screen.blit(text_surface, (x + (width - text_surface.get_width()) // 2, y + (height - text_surface.get_height()) // 2))
 
+
+# เริ่ม Hand Tracking
+hand_tracker = HandTracking()
+
+
+
+
 # ตัวแปรควบคุม
 running = True
 main_menu = True
@@ -50,7 +59,7 @@ countdown_time = 3
 cookie_image = None
 
 game_start_time = None  # ตัวแปรจับเวลาการเริ่มเกม
-game_duration = 180000  # ระยะเวลาเกม 3 นาที (3 นาที = 180,000 มิลลิวินาที)
+game_duration = 60600  # ระยะเวลาเกม 3 นาที (3 นาที = 180,000 มิลลิวินาที) นานเกินไปปะ? ขอเร็วสุด 1 นาทีแล้วกัน 60600
 
 
 while running:
@@ -108,8 +117,25 @@ while running:
             print("Game Started!")
             # เริ่มเกมจริง ๆ ที่นี่
             start_game_page = False # เอา text Starting Game! ออก
-            # แสดงรูป cookie ที่เลือกตามระดับความยาก
-            screen.blit(cookie_image, (WIDTH // 2 - cookie_image.get_width() // 2, HEIGHT // 2 - cookie_image.get_height() // 2))
+
+
+            # แสดงภาพจากกล้อง
+            frame_surface = hand_tracker.get_frame()
+            if frame_surface:
+                # ขยายภาพจากกล้อง
+                frame_surface = pygame.transform.scale(frame_surface, (WIDTH, HEIGHT))  # ขยายภาพกล้องให้เต็มหน้าจอ
+
+                # วางภาพจากกล้องบนหน้าจอ
+                screen.blit(frame_surface, (0, 0))
+
+                # แสดงภาพคุกกี้ซ้อนภาพกล้อง
+                if cookie_image:
+                    cookie_image.set_alpha(200)  # ทำให้ภาพคุกกี้โปร่งใส
+                    # ขยายภาพคุกกี้
+                    cookie_image = pygame.transform.scale(cookie_image, (400, 400))  # ขยายภาพคุกกี้
+
+                    # วางภาพคุกกี้บนภาพจากกล้อง
+                    screen.blit(cookie_image, (WIDTH // 2 - cookie_image.get_width() // 2, HEIGHT // 2 - cookie_image.get_height() // 2))
 
             # เริ่มจับเวลาของเกม
             if game_start_time is None:
@@ -119,17 +145,17 @@ while running:
             elapsed_time = pygame.time.get_ticks() - game_start_time  # เวลาที่ผ่านไปตั้งแต่เริ่มเกม
             remaining_time = game_duration - elapsed_time  # เวลาที่เหลือ
 
-            # แสดงเวลาเหลือ
+
+            # แสดงเวลาเหลือที่มุมขวาบน
             minutes = remaining_time // 60000
             seconds = (remaining_time // 1000) % 60
-            time_text = font.render(f"{minutes:02}:{seconds:02}", True, RED)
-            screen.blit(time_text, (WIDTH // 2 - time_text.get_width() // 2, HEIGHT // 2 - time_text.get_height() // 2))
+            time_text = time_font.render(f"{minutes:02}:{seconds:02}", True, RED)
+            screen.blit(time_text, ((WIDTH - time_text.get_width()) // 2, 80))  # แสดงเวลานับถอยหลังตรงกลาง บนคุกกี้
 
             # ถ้าหมดเวลา 3 นาที
             if remaining_time <= 0:
                 print("Game Over: Time's up!")
                 running = False  # จบเกม
-
 
 
     # จับ event
@@ -199,5 +225,6 @@ while running:
     pygame.display.flip()  # อัพเดตหน้าจอ
 
 # ปิดโปรแกรม
+hand_tracker.stop()
 pygame.quit()
 sys.exit()
