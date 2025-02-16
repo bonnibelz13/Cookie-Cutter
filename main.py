@@ -20,7 +20,7 @@ pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Cookie Cutter Game")
 
-# ฟอนต์
+# font
 font = pygame.font.SysFont("Arial", 40)
 time_font = pygame.font.SysFont("Arial", 60) # font ตัวtext นับถอยหลังในเกม
 
@@ -66,7 +66,7 @@ while running:
     screen.fill(BLACK)  # พื้นหลัง BLACK
 
     if main_menu:
-        # วาดข้อความ "Main Menu"
+        # วาดข้อความ "Cookie Cutter"
         title_text = font.render("Cookie Cutter", True, RED)
         screen.blit(title_text, (WIDTH // 2 - title_text.get_width() // 2, HEIGHT // 4 - title_text.get_height() // 2))
 
@@ -80,7 +80,7 @@ while running:
     if difficulty_selected:
         # วาดข้อความ "Select Difficulty"
         title_text = font.render("Select Difficulty", True, RED)
-        screen.blit(title_text, (WIDTH // 2 - title_text.get_width() // 2, HEIGHT // 4 - title_text.get_height() // 2))
+        screen.blit(title_text, (WIDTH // 2 - title_text.get_width() // 2, HEIGHT // 5 - title_text.get_height() // 2))
 
         # วาดปุ่ม "Easy", "Medium", "Hard" แบบเรียงในแนวตั้ง
         button_width = 300
@@ -132,7 +132,7 @@ while running:
                 if cookie_image:
                     cookie_image.set_alpha(200)  # ทำให้ภาพคุกกี้โปร่งใส
                     # ขยายภาพคุกกี้
-                    cookie_image = pygame.transform.scale(cookie_image, (400, 400))  # ขยายภาพคุกกี้
+                    cookie_image = pygame.transform.scale(cookie_image, (400, 400))
 
                     # วางภาพคุกกี้บนภาพจากกล้อง
                     screen.blit(cookie_image, (WIDTH // 2 - cookie_image.get_width() // 2, HEIGHT // 2 - cookie_image.get_height() // 2))
@@ -146,15 +146,17 @@ while running:
             remaining_time = game_duration - elapsed_time  # เวลาที่เหลือ
 
 
-            # แสดงเวลาเหลือที่มุมขวาบน
+            # แสดงเวลาเหลือที่ข้างบนกึ่งกลางจอ
             minutes = remaining_time // 60000
             seconds = (remaining_time // 1000) % 60
             time_text = time_font.render(f"{minutes:02}:{seconds:02}", True, RED)
             screen.blit(time_text, ((WIDTH - time_text.get_width()) // 2, 80))  # แสดงเวลานับถอยหลังตรงกลาง บนคุกกี้
 
-            # ถ้าหมดเวลา 3 นาที
+            # ถ้าหมดเวลา
             if remaining_time <= 0:
                 print("Game Over: Time's up!")
+                
+                # ให้ทำไรต่อ
                 running = False  # จบเกม
 
 
