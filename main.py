@@ -3,7 +3,12 @@
 import pygame
 import sys
 import time
+
 from hand_tracking import HandTracking
+from sound_manager import SoundManager
+
+
+
 
 
 # กำหนดค่าพื้นฐาน
@@ -20,9 +25,20 @@ pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Cookie Cutter Game")
 
+# สร้างอ็อบเจ็กต์ SoundManager
+sound_manager = SoundManager()
+
+
+# เล่นเสียงพื้นหลังเมื่อเปิดหน้าเมนูหลัก
+if not pygame.mixer.music.get_busy():  # ตรวจสอบว่าเสียงพื้นหลังไม่ได้เล่นอยู่
+    sound_manager.play_bg_music()
+
+
 # font
 font = pygame.font.SysFont("Arial", 40)
 time_font = pygame.font.SysFont("Arial", 60) # font ตัวtext นับถอยหลังในเกม
+
+
 
 # ฟังก์ชันสำหรับวาดปุ่ม
 def draw_button(text, x, y, width, height, color, hover_color, border_color):
@@ -61,11 +77,15 @@ cookie_image = None
 game_start_time = None  # ตัวแปรจับเวลาการเริ่มเกม
 game_duration = 60600  # ระยะเวลาเกม 3 นาที (3 นาที = 180,000 มิลลิวินาที) นานเกินไปปะ? ขอเร็วสุด 1 นาทีแล้วกัน 60600
 
+# เพิ่มตัวแปร game_over_time
+game_over_time = None
+
 
 while running:
     screen.fill(BLACK)  # พื้นหลัง BLACK
 
     if main_menu:
+
         # วาดข้อความ "Cookie Cutter"
         title_text = font.render("Cookie Cutter", True, RED)
         screen.blit(title_text, (WIDTH // 2 - title_text.get_width() // 2, HEIGHT // 4 - title_text.get_height() // 2))
@@ -140,10 +160,12 @@ while running:
             # เริ่มจับเวลาของเกม
             if game_start_time is None:
                 game_start_time = pygame.time.get_ticks()  # เริ่มจับเวลาเมื่อเกมเริ่ม
+                # เล่นเสียง in game 
+                sound_manager.play_in_game_music()
 
             # คำนวณเวลาที่เหลือ
             elapsed_time = pygame.time.get_ticks() - game_start_time  # เวลาที่ผ่านไปตั้งแต่เริ่มเกม
-            remaining_time = game_duration - elapsed_time  # เวลาที่เหลือ
+            remaining_time = max(0, game_duration - elapsed_time)  # เวลาที่เหลือ (ไม่ให้ต่ำกว่า 0)
 
 
             # แสดงเวลาเหลือที่ข้างบนกึ่งกลางจอ
@@ -153,14 +175,33 @@ while running:
             screen.blit(time_text, ((WIDTH - time_text.get_width()) // 2, 80))  # แสดงเวลานับถอยหลังตรงกลาง บนคุกกี้
 
             # ถ้าหมดเวลา
-            if remaining_time <= 600: # <= 1 วิ
-                print("Game Over: Time's up!")
-                # ให้แสดงข้อความ " Time's Up! "
+            if remaining_time <= 600:  # <= 1 วินาที
+                if game_over_time is None:  # ตั้งค่าเวลาที่เกมจบ
+                    game_over_time = pygame.time.get_ticks()  # บันทึกเวลาที่เกมจบ
+                    print("Game Over: Time's up!")
+                    
+                    # หยุดเสียงพื้นหลังเมื่อหมดเวลา
+                    pygame.mixer.music.stop()
+                
+                # แสดงข้อความ "Time's Up!"
                 title_text = font.render("Time's Up!", True, RED)
                 screen.blit(title_text, (WIDTH // 2 - title_text.get_width() // 2, HEIGHT // 2 - title_text.get_height() // 2))
                 
-                # ให้ทำไรต่อ
-                running = False  # จบเกม
+                
+                # ตรวจสอบว่าเวลาผ่านไป 2 วินาทีหรือยัง
+                if pygame.time.get_ticks() - game_over_time >= 2000:
+                    # รีเซ็ตสถานะเกม
+                    main_menu = True  # กลับไปที่หน้าเมนูหลัก
+                    difficulty_selected = False
+                    start_game_page = False
+                    countdown = False
+                    countdown_time = 3  # รีเซ็ตนับถอยหลัง
+                    game_start_time = None  # รีเซ็ตเวลาเริ่มเกม
+                    cookie_image = None  # ลบภาพคุกกี้
+                    game_over_time = None  # รีเซ็ตเวลาที่เกมจบ
+                    
+                    # รีเซ็ตเสียงพื้นหลังเมื่อกลับไปที่หน้าเมนูหลัก
+                    sound_manager.play_bg_music()
 
 
     # จับ event
@@ -170,12 +211,14 @@ while running:
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_x, mouse_y = pygame.mouse.get_pos()
 
-
             if main_menu:
                 # ถ้าคลิกที่ปุ่ม "Play Game"
                 if WIDTH // 4 - 150 < mouse_x < WIDTH // 4 + 150 and HEIGHT // 2 - 40 < mouse_y < HEIGHT // 2 + 40:
                     print("Play Game Pressed")
+                    # เล่นเสียงคลิกเมื่อกดปุ่ม
+                    sound_manager.play_click_sound()
                     main_menu = False  # เปลี่ยนหน้าไปยังเลือกความยาก
+                    
                     #แสดงหน้าเลือกระดับความยาก
                     difficulty_selected = True
                     difficulty = None  # รีเซ็ตความยาก
@@ -191,6 +234,10 @@ while running:
                 if WIDTH // 2 - button_width // 2 < mouse_x < WIDTH // 2 + button_width // 2:
                     if button_y_start < mouse_y < button_y_start + button_height:
                         difficulty = "Easy"
+
+                        # เล่นเสียงคลิกเมื่อกดปุ่ม
+                        sound_manager.play_click_sound()
+
                         cookie_image = pygame.image.load("assets/cookie_template_easy.png")
                         print("Selected Difficulty: Easy")
                         # difficulty_selected = False 
@@ -200,6 +247,10 @@ while running:
                 if WIDTH // 2 - button_width // 2 < mouse_x < WIDTH // 2 + button_width // 2:
                     if button_y_start + button_height + button_spacing < mouse_y < button_y_start + button_height * 2 + button_spacing:
                         difficulty = "Normal"
+
+                        # เล่นเสียงคลิกเมื่อกดปุ่ม
+                        sound_manager.play_click_sound()
+
                         cookie_image = pygame.image.load("assets/cookie_template_normal.png")
                         print("Selected Difficulty: Normal")
                         # difficulty_selected = False
@@ -209,6 +260,10 @@ while running:
                 if WIDTH // 2 - button_width // 2 < mouse_x < WIDTH // 2 + button_width // 2:
                     if button_y_start + (button_height + button_spacing) * 2 < mouse_y < button_y_start + (button_height + button_spacing) * 3:
                         difficulty = "Hard"
+
+                        # เล่นเสียงคลิกเมื่อกดปุ่ม
+                        sound_manager.play_click_sound()
+
                         cookie_image = pygame.image.load("assets/cookie_template_hard.png")
                         print("Selected Difficulty: Hard")
                         # difficulty_selected = False
@@ -216,6 +271,10 @@ while running:
 
             # ถ้าคลิกที่ปุ่ม "Quit"
             elif WIDTH // 4 - 150 < mouse_x < WIDTH // 4 + 150 and HEIGHT // 2 + 100 < mouse_y < HEIGHT // 2 + 180:
+
+                # เล่นเสียงคลิกเมื่อกดปุ่ม
+                sound_manager.play_click_sound()
+
                 running = False
 
 
@@ -223,6 +282,11 @@ while running:
             if start_game_page and cookie_image:
                 difficulty_selected = False # ลบหน้าเลือกระดับความยาก เปลี่ยนไปหน้า Start Game
                 # print("มี difficulty เลือกแล้ว")
+
+                # หยุดเสียงพื้นหลังเมื่อออกจากหน้าเลือกระดับความยาก
+                pygame.mixer.music.stop()
+
+
                 print(f"Starting Game with Difficulty: {difficulty}")
                 countdown = True
                 countdown_start = time.time()  # เริ่มนับถอยหลัง
