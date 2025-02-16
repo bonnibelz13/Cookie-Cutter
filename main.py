@@ -153,8 +153,11 @@ while running:
             screen.blit(time_text, ((WIDTH - time_text.get_width()) // 2, 80))  # แสดงเวลานับถอยหลังตรงกลาง บนคุกกี้
 
             # ถ้าหมดเวลา
-            if remaining_time <= 0:
+            if remaining_time <= 600: # <= 1 วิ
                 print("Game Over: Time's up!")
+                # ให้แสดงข้อความ " Time's Up! "
+                title_text = font.render("Time's Up!", True, RED)
+                screen.blit(title_text, (WIDTH // 2 - title_text.get_width() // 2, HEIGHT // 2 - title_text.get_height() // 2))
                 
                 # ให้ทำไรต่อ
                 running = False  # จบเกม
