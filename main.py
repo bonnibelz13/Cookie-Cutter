@@ -76,20 +76,20 @@ while running:
         # วาดปุ่ม "Quit"
         draw_button("Quit", WIDTH // 4 - 150, HEIGHT // 2 + 100, 300, 80, BUTTON_COLOR, BUTTON_HOVER_COLOR, BUTTON_BORDER_COLOR)
         
-    # ตำแหน่งปุ่ม "Easy", "Medium", "Hard" ให้อยู่ในแนวตั้ง
+    # ตำแหน่งปุ่ม "Easy", "Normal", "Hard" ให้อยู่ในแนวตั้ง
     if difficulty_selected:
         # วาดข้อความ "Select Difficulty"
         title_text = font.render("Select Difficulty", True, RED)
         screen.blit(title_text, (WIDTH // 2 - title_text.get_width() // 2, HEIGHT // 5 - title_text.get_height() // 2))
 
-        # วาดปุ่ม "Easy", "Medium", "Hard" แบบเรียงในแนวตั้ง
+        # วาดปุ่ม "Easy", "Normal", "Hard" แบบเรียงในแนวตั้ง
         button_width = 300
         button_height = 80
         button_spacing = 20  # ระยะห่างระหว่างปุ่ม
         button_y_start = HEIGHT // 2 - (button_height * 3 + button_spacing * 2) // 2  # จัดกลางแนวตั้ง
 
         draw_button("Easy", WIDTH // 2 - button_width // 2, button_y_start, button_width, button_height, BUTTON_COLOR, BUTTON_HOVER_COLOR, BUTTON_BORDER_COLOR)
-        draw_button("Medium", WIDTH // 2 - button_width // 2, button_y_start + button_height + button_spacing, button_width, button_height, BUTTON_COLOR, BUTTON_HOVER_COLOR, BUTTON_BORDER_COLOR)
+        draw_button("Normal", WIDTH // 2 - button_width // 2, button_y_start + button_height + button_spacing, button_width, button_height, BUTTON_COLOR, BUTTON_HOVER_COLOR, BUTTON_BORDER_COLOR)
         draw_button("Hard", WIDTH // 2 - button_width // 2, button_y_start + (button_height + button_spacing) * 2, button_width, button_height, BUTTON_COLOR, BUTTON_HOVER_COLOR, BUTTON_BORDER_COLOR)
 
 
@@ -178,7 +178,7 @@ while running:
                     difficulty = None  # รีเซ็ตความยาก
 
             if difficulty_selected:
-                # ถ้าคลิกที่ปุ่ม "Easy", "Medium", หรือ "Hard"
+                # ถ้าคลิกที่ปุ่ม "Easy", "Normal", หรือ "Hard"
                 button_width = 300
                 button_height = 80
                 button_spacing = 20
@@ -193,12 +193,12 @@ while running:
                         # difficulty_selected = False 
                         start_game_page = True # เปลี่ยนไปหน้า Start Game
 
-                # ตรวจสอบตำแหน่งการคลิกที่ปุ่ม "Medium"
+                # ตรวจสอบตำแหน่งการคลิกที่ปุ่ม "Normal"
                 if WIDTH // 2 - button_width // 2 < mouse_x < WIDTH // 2 + button_width // 2:
                     if button_y_start + button_height + button_spacing < mouse_y < button_y_start + button_height * 2 + button_spacing:
-                        difficulty = "Medium"
-                        cookie_image = pygame.image.load("assets/cookie_template_medium.png")
-                        print("Selected Difficulty: Medium")
+                        difficulty = "Normal"
+                        cookie_image = pygame.image.load("assets/cookie_template_normal.png")
+                        print("Selected Difficulty: Normal")
                         # difficulty_selected = False
                         start_game_page = True # เปลี่ยนไปหน้า Start Game
 
