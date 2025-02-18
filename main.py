@@ -4,10 +4,9 @@ import pygame
 import sys
 import time
 
+from drawing import DrawingApp
 from hand_tracking import HandTracking
 from sound_manager import SoundManager
-
-
 
 
 
@@ -60,6 +59,8 @@ def draw_button(text, x, y, width, height, color, hover_color, border_color):
 
 # เริ่ม Hand Tracking
 hand_tracker = HandTracking()
+# สร้างอ็อบเจ็กต์ DrawingApp
+drawing_app = DrawingApp()
 
 
 
@@ -139,23 +140,31 @@ while running:
             start_game_page = False # เอา text Starting Game! ออก
 
 
-            # แสดงภาพจากกล้อง
+           # แสดงภาพจากกล้อง
             frame_surface = hand_tracker.get_frame()
             if frame_surface:
-                # ขยายภาพจากกล้อง
-                frame_surface = pygame.transform.scale(frame_surface, (WIDTH, HEIGHT))  # ขยายภาพกล้องให้เต็มหน้าจอ
+                # ขยายภาพจากกล้องให้เต็มขนาดหน้าจอ
+                frame_surface = pygame.transform.scale(frame_surface, (WIDTH, HEIGHT))
 
-                # วางภาพจากกล้องบนหน้าจอ
-                screen.blit(frame_surface, (0, 0))
+                # กลับภาพจากกล้องในแนวนอน (ซ้ายไปขวา)
+                frame_surface = pygame.transform.flip(frame_surface, True, False)
+
+                # ดึงตำแหน่งนิ้วจาก Hand Tracking
+                hand_positions = hand_tracker.get_hand_positions()
+
+                # วาดเส้นตามตำแหน่งนิ้ว
+                frame_surface_with_drawing = drawing_app.draw(frame_surface, hand_positions)
 
                 # แสดงภาพคุกกี้ซ้อนภาพกล้อง
                 if cookie_image:
-                    cookie_image.set_alpha(200)  # ทำให้ภาพคุกกี้โปร่งใส
-                    # ขยายภาพคุกกี้
+                    cookie_image.set_alpha(200)
                     cookie_image = pygame.transform.scale(cookie_image, (400, 400))
 
-                    # วางภาพคุกกี้บนภาพจากกล้อง
-                    screen.blit(cookie_image, (WIDTH // 2 - cookie_image.get_width() // 2, HEIGHT // 2 - cookie_image.get_height() // 2))
+                    # วางภาพคุกกี้บนภาพที่วาดเส้นแล้ว
+                    frame_surface_with_drawing.blit(cookie_image, (WIDTH // 2 - cookie_image.get_width() // 2, HEIGHT // 2 - cookie_image.get_height() // 2))
+
+                # วางภาพที่วาดเส้นแล้วบนหน้าจอ
+                screen.blit(frame_surface_with_drawing, (0, 0))
 
             # เริ่มจับเวลาของเกม
             if game_start_time is None:

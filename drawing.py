@@ -1,27 +1,54 @@
-# drawing.py
-
+import pygame
 import numpy as np
 import cv2
-from hand_tracking import HandTracker
+
 
 class DrawingApp:
     def __init__(self):
-        self.canvas = np.zeros((480, 640, 3), dtype=np.uint8)  # สร้างกระดานวาดรูป
-        self.tracker = HandTracker()  # ใช้ HandTracker เพื่อตรวจจับมือ
+        self.drawing = False
+        self.prev_position = None  # เก็บพิกัดก่อนหน้าของนิ้ว
+        self.positions = []  # เก็บตำแหน่งของมือทั้งหมดที่ลากไว้
 
-    def draw(self, frame, landmarks):
-        """
-        วาดเส้นตามตำแหน่งนิ้วชี้
-        """
-        if landmarks and landmarks.multi_hand_landmarks:  # ตรวจสอบว่า landmarks มีค่าหรือไม่
-            index_finger = landmarks.multi_hand_landmarks[0].landmark[8]  # นิ้วชี้
-            x, y = int(index_finger.x * 640), int(index_finger.y * 480)
-            cv2.circle(self.canvas, (x, y), 5, (255, 255, 255), -1)  # วาดจุดบนกระดาน
+    def draw(self, frame_surface, hand_positions):
+        # Convert the pygame surface to a numpy array
+        frame = pygame.surfarray.array3d(frame_surface)  
+        
+        frame = cv2.transpose(frame)  
+        #frame = cv2.flip(frame, 1)    
 
-        return cv2.addWeighted(frame, 0.7, self.canvas, 0.3, 0)  # ผสมภาพจากกล้องและกระดานวาดรูป
+        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)  
 
-    def clear_canvas(self):
-        """
-        ล้างกระดานวาดรูป
-        """
-        self.canvas = np.zeros((480, 640, 3), dtype=np.uint8)
+        # Create a canvas to draw on (same size as the frame)
+        self.canvas = np.zeros_like(frame)
+
+        #ตำแหน่งนิ้ว
+        if hand_positions:
+            for hand_position in hand_positions:
+                x, y = hand_position
+
+                # เช็คว่ามีการเคลื่อนที่ของนิ้ว
+                if self.prev_position:
+                    prev_x, prev_y = self.prev_position
+                    if 0 <= prev_x < frame.shape[1] and 0 <= prev_y < frame.shape[0]:
+                        # วาดเส้นจากพิกัดก่อนหน้าถึงพิกัดปัจจุบัน
+                        cv2.line(self.canvas, (prev_x, prev_y), (x, y), (0, 0, 255), 5)  # วาดเส้นสีแดง
+                
+                # เก็บตำแหน่งปัจจุบันไว้
+                self.prev_position = (x, y)
+                self.positions.append((x, y))  # เก็บตำแหน่งของนิ้วทุกจุด
+
+        # วาดเส้นทุกเส้นที่ผ่านมาบน canvas
+        if len(self.positions) >= 2:
+            for i in range(1, len(self.positions)):
+                cv2.line(self.canvas, self.positions[i - 1], self.positions[i], (0, 0, 255), 5)
+
+        # Blend the frame and canvas
+        frame_with_drawing = cv2.addWeighted(frame, 0.8, self.canvas, 0.5, 0)
+
+        # Convert the blended frame back to a pygame surface
+        frame_with_drawing = cv2.cvtColor(frame_with_drawing, cv2.COLOR_BGR2RGB)  
+        frame_with_drawing = cv2.transpose(frame_with_drawing)  
+        frame_with_drawing = cv2.flip(frame_with_drawing, 0)    
+        frame_with_drawing = pygame.surfarray.make_surface(frame_with_drawing)
+
+        return frame_with_drawing
