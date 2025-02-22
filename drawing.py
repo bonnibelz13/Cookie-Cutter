@@ -6,7 +6,7 @@ import cv2
 class DrawingApp:
     def __init__(self):
         self.drawing = False
-        self.prev_position = None  # เก็บพิกัดก่อนหน้าของนิ้ว
+        self.prev_position = None  # เก็บพิกัดก่อนหน้า
         self.positions = []  # เก็บตำแหน่งของมือทั้งหมดที่ลากไว้
 
     def draw(self, frame_surface, hand_positions):
@@ -18,7 +18,6 @@ class DrawingApp:
 
         frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)  
 
-        # Create a canvas to draw on (same size as the frame)
         self.canvas = np.zeros_like(frame)
 
         #ตำแหน่งนิ้ว
@@ -26,14 +25,18 @@ class DrawingApp:
             for hand_position in hand_positions:
                 x, y = hand_position
 
-                # เช็คว่ามีการเคลื่อนที่ของนิ้ว
+                frame_width = frame.shape[1]
+                x = frame_width - x  
+                
+
+                # เช็คว่ามีการเคลื่อนที่ของนิ้วมั้ย
                 if self.prev_position:
                     prev_x, prev_y = self.prev_position
                     if 0 <= prev_x < frame.shape[1] and 0 <= prev_y < frame.shape[0]:
-                        # วาดเส้นจากพิกัดก่อนหน้าถึงพิกัดปัจจุบัน
+                        # วาดเส้นจากพิกัดก่อนหน้าถึงพิกัดล่าสุด
                         cv2.line(self.canvas, (prev_x, prev_y), (x, y), (0, 0, 255), 5)  # วาดเส้นสีแดง
                 
-                # เก็บตำแหน่งปัจจุบันไว้
+                # เก็บตำแหน่งล่าสุดเอาไว้
                 self.prev_position = (x, y)
                 self.positions.append((x, y))  # เก็บตำแหน่งของนิ้วทุกจุด
 

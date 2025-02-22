@@ -123,7 +123,6 @@ while running:
 
     # นับถอยหลัง 3 2 1
     if countdown:
-        # วาดข้อความ "3", "2", "1"
         countdown_text = font.render(str(countdown_time), True, RED)
         screen.blit(countdown_text, (WIDTH // 2 - countdown_text.get_width() // 2, HEIGHT // 2 - countdown_text.get_height() // 2))
 
@@ -145,14 +144,12 @@ while running:
             if frame_surface:
                 # ขยายภาพจากกล้องให้เต็มขนาดหน้าจอ
                 frame_surface = pygame.transform.scale(frame_surface, (WIDTH, HEIGHT))
-
-                # กลับภาพจากกล้องในแนวนอน (ซ้ายไปขวา)
                 frame_surface = pygame.transform.flip(frame_surface, True, False)
 
-                # ดึงตำแหน่งนิ้วจาก Hand Tracking
+                # ดึงตำแหน่งนิ้ว
                 hand_positions = hand_tracker.get_hand_positions()
 
-                # วาดเส้นตามตำแหน่งนิ้ว
+                # วาดเส้น
                 frame_surface_with_drawing = drawing_app.draw(frame_surface, hand_positions)
 
                 # แสดงภาพคุกกี้ซ้อนภาพกล้อง
@@ -160,8 +157,12 @@ while running:
                     cookie_image.set_alpha(200)
                     cookie_image = pygame.transform.scale(cookie_image, (400, 400))
 
-                    # วางภาพคุกกี้บนภาพที่วาดเส้นแล้ว
-                    frame_surface_with_drawing.blit(cookie_image, (WIDTH // 2 - cookie_image.get_width() // 2, HEIGHT // 2 - cookie_image.get_height() // 2))
+                    # วางภาพคุกกี้
+                    frame_surface.blit(cookie_image, (WIDTH // 2 - cookie_image.get_width() // 2, HEIGHT // 2 - cookie_image.get_height() // 2))
+
+                # ดึงตำแหน่งนิ้ว
+                hand_positions = hand_tracker.get_hand_positions()
+                frame_surface_with_drawing = drawing_app.draw(frame_surface, hand_positions)
 
                 # วางภาพที่วาดเส้นแล้วบนหน้าจอ
                 screen.blit(frame_surface_with_drawing, (0, 0))

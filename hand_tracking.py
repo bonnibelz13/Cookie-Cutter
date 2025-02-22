@@ -1,7 +1,9 @@
 import cv2
 import mediapipe as mp
 import threading
+import numpy as np
 import pygame
+from collections import deque
 
 
 class HandTracking:
@@ -17,6 +19,10 @@ class HandTracking:
         self.frame_surface = None
         self.running = True
         self.hand_positions = []  # เก็บค่าพิกัดของนิ้วที่ตรวจพบ
+        self.smooth_positions = deque(maxlen=5)
+
+        self.original_width = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        self.original_height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
         self.thread = threading.Thread(target=self.capture_hand_tracking, daemon=True)
         self.thread.start()
@@ -42,19 +48,33 @@ class HandTracking:
 
                     # ดึงค่าพิกัดของปลายนิ้วชี้ (landmark 8)
                     index_finger_tip = hand_landmarks.landmark[self.mp_hands.HandLandmark.INDEX_FINGER_TIP]
+
+                    # ตรวจสอบว่าอยู่ในช่วง 0-1 (เป็นพิกัดที่ถูกต้อง)
+                    if not (0 <= index_finger_tip.x <= 1 and 0 <= index_finger_tip.y <= 1):
+                        continue  # ข้ามไปถ้าค่าผิดปกติ
+
                     h, w, _ = frame.shape
                     cx, cy = int(index_finger_tip.x * w), int(index_finger_tip.y * h)
-                    self.hand_positions.append((cx, cy))
+                    self.smooth_positions.append((cx, cy))
+
+                    # คำนวณค่าเฉลี่ยของพิกัดในqueueที่เก็บไว้ 
+                    if len(self.smooth_positions) > 0:
+                        avg_x = int(np.mean([pos[0] for pos in self.smooth_positions]))
+                        avg_y = int(np.mean([pos[1] for pos in self.smooth_positions]))
+                    else:
+                        avg_x, avg_y = cx, cy
+
+                    self.hand_positions.append((avg_x, avg_y))
 
                     # กรอบสี่เหลี่ยมรอบปลายนิ้วชี้
-                    rect_size = 50
+                    rect_size = 30
                     cv2.rectangle(frame, (cx - rect_size, cy - rect_size),
-                                  (cx + rect_size, cy + rect_size), (0, 255, 0), 2)
+                                  (cx + rect_size, cy + rect_size), (0, 255, 0), 1)
 
                     # วาดจุดที่ปลายนิ้วชี้
                     cv2.circle(frame, (cx, cy), 10, (0, 0, 255), -1)
 
-                    # แสดงพิกัดของปลายนิ้วชี้
+                    # โชพิกัดของปลายนิ้วชี้(เด่วมาลบจร้า)
                     cv2.putText(frame, f"({cx}, {cy})", (cx + 20, cy - 20),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
 
