@@ -11,7 +11,7 @@ from sound_manager import SoundManager
 
 
 # กำหนดค่าพื้นฐาน
-WIDTH, HEIGHT = 1200, 600
+WIDTH, HEIGHT = 1200, 800
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
 BUTTON_COLOR = (0, 0, 0)  # พื้นหลังปุ่มเป็นสีดำ
