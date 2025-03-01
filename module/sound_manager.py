@@ -19,3 +19,7 @@ class SoundManager:
     def play_in_game_music(self):
         pygame.mixer.music.load(self.in_game_music)
         pygame.mixer.music.play(-1) # loop
+
+    def play_failure_sound(self):
+        failure_sound = pygame.mixer.Sound(self.click_sound)
+        failure_sound.play()
