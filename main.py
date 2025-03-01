@@ -117,7 +117,7 @@ while running:
             if frame_surface:
                 frame_surface = pygame.transform.scale(frame_surface, (WIDTH, HEIGHT))
                 # ถ้าต้องการ mirror ภาพให้ flip ที่นี่ (ทำครั้งเดียว)
-                #frame_surface = pygame.transform.flip(frame_surface, True, False)
+                # frame_surface = pygame.transform.flip(frame_surface, True, False)
 
                 # ดึงพิกัดนิ้วจาก HandTracking
                 hand_positions = hand_tracker.get_hand_positions()
@@ -184,6 +184,12 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+            
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_r:
+                drawing_app.reset()
+            elif event.key == pygame.K_ESCAPE:
+                running = False  
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_x, mouse_y = pygame.mouse.get_pos()
