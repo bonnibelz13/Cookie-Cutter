@@ -1,27 +1,30 @@
-# drawing.py
-
-import numpy as np
-import cv2
-from hand_tracking import HandTracker
+import pygame
 
 class DrawingApp:
-    def __init__(self):
-        self.canvas = np.zeros((480, 640, 3), dtype=np.uint8)  # สร้างกระดานวาดรูป
-        self.tracker = HandTracker()  # ใช้ HandTracker เพื่อตรวจจับมือ
+    def __init__(self, width, height):
+        self.prev_position = None  # เก็บพิกัดก่อนหน้า
+        self.positions = []        # เก็บตำแหน่งของนิ้วที่ลากไว้
+        # สร้าง surface สำหรับวาดเส้นที่โปร่งแสง
+        self.drawing_layer = pygame.Surface((width, height), pygame.SRCALPHA)
+        self.drawing_layer.fill((0, 0, 0, 0))  # โปร่งแสง
 
-    def draw(self, frame, landmarks):
-        """
-        วาดเส้นตามตำแหน่งนิ้วชี้
-        """
-        if landmarks and landmarks.multi_hand_landmarks:  # ตรวจสอบว่า landmarks มีค่าหรือไม่
-            index_finger = landmarks.multi_hand_landmarks[0].landmark[8]  # นิ้วชี้
-            x, y = int(index_finger.x * 640), int(index_finger.y * 480)
-            cv2.circle(self.canvas, (x, y), 5, (255, 255, 255), -1)  # วาดจุดบนกระดาน
+    def reset(self):
+        self.prev_position = None
+        self.positions = []
+        self.drawing_layer.fill((0, 0, 0, 0))
 
-        return cv2.addWeighted(frame, 0.7, self.canvas, 0.3, 0)  # ผสมภาพจากกล้องและกระดานวาดรูป
+    def update(self, hand_positions):
+        """อัปเดตการวาดเส้นลงใน drawing_layer จากตำแหน่งนิ้วที่ส่งเข้ามา"""
+        # หากมีตำแหน่งนิ้วใหม่
+        if hand_positions:
+            for hand_position in hand_positions:
+                x, y = hand_position
+                # ถ้ามีตำแหน่งก่อนหน้า ให้วาดเส้นจากก่อนหน้ามายังตำแหน่งปัจจุบัน
+                if self.prev_position:
+                    pygame.draw.line(self.drawing_layer, (255, 0, 0), self.prev_position, (x, y), 5)
+                self.prev_position = (x, y)
+                self.positions.append((x, y))
 
-    def clear_canvas(self):
-        """
-        ล้างกระดานวาดรูป
-        """
-        self.canvas = np.zeros((480, 640, 3), dtype=np.uint8)
+    def draw_layer(self):
+        """คืนค่า surface ที่มีเส้นที่วาดไว้ (layer เส้น)"""
+        return self.drawing_layer
