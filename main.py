@@ -10,8 +10,7 @@ from sound_manager import SoundManager
 from shape_match import ShapeMatcher 
 from gestures import HandGesture
 #from accuracy import get_cookie_contour, get_rotated_points, compute_accuracy
-
-hand_gesture = HandGesture()
+ 
 # กำหนดค่าพื้นฐาน
 WIDTH, HEIGHT = 1200, 900
 BLACK = (0, 0, 0)
@@ -52,6 +51,9 @@ def draw_button(text, x, y, width, height, color, hover_color, border_color):
 # เริ่ม Hand Tracking และ Drawing App
 hand_tracker = HandTracking()
 drawing_app = DrawingApp(WIDTH, HEIGHT)
+# สร้างออบเจกต์ HandGesture
+gesture_recognizer = HandGesture()
+
 
 # ตัวแปรควบคุมสถานะเกม
 running = True
@@ -125,15 +127,41 @@ while running:
 
                 # ดึงพิกัดนิ้วจาก HandTracking
                 hand_positions = hand_tracker.get_hand_positions()
+
+                 # ดึงพิกัดทั้ง 21 จุดของมือ
+                all_hand_landmarks = hand_tracker.get_all_hand_landmarks()
                 # ปรับพิกัดจากความละเอียดของกล้อง (original_width, original_height) ไปยังขนาดหน้าจอ
                 if hand_positions:
                     scale_x = WIDTH / hand_tracker.original_width
                     scale_y = HEIGHT / hand_tracker.original_height
                     hand_positions = [(int(x * scale_x), int(y * scale_y)) for (x, y) in hand_positions]
 
+
+                    # ปรับพิกัดของจุดทั้งหมดของมือ (ถ้ามี)
+                    if all_hand_landmarks:
+                        all_hand_landmarks = [(int(x * scale_x), int(y * scale_y)) for (x, y) in all_hand_landmarks]
+
                 # อัปเดตเลเยอร์เส้นใน DrawingApp
                 drawing_app.update(hand_positions)
                 drawing_layer = drawing_app.draw_layer()
+
+
+               # ตรวจจับท่าทางจากมือ
+                if all_hand_landmarks:
+                  gesture_recognizer.process_gesture(all_hand_landmarks)
+
+                # ตรวจสอบว่าเกมกำลังดำเนินการหรือไม่
+                if not gesture_recognizer.game_running:
+                    screen.fill((0, 0, 0))
+                    print("🤘 Rock Gesture - Quitting")  # เมื่อท่าทาง "Rock Hand Sign" ถูกตรวจจับ
+                    title_text = font.render("EXIT GAME BYE!", True, (0, 0, 255))
+                    screen.blit(title_text, (WIDTH // 2 - title_text.get_width() // 2,
+                                            HEIGHT // 2 - title_text.get_height() // 2))
+                    pygame.display.flip()
+                      # เติมหน้าจอด้วยสีดำ
+                    pygame.time.wait(3000)  # แสดง Game Over สักพัก
+                    running = False  # หยุดเกม
+                    
 
                 # สร้างพื้นหลังใหม่ (background) โดยเริ่มจากภาพจากกล้อง
                 base_surface = frame_surface.copy()
