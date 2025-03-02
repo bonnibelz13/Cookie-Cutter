@@ -7,7 +7,11 @@ import numpy as np
 from drawing import DrawingApp
 from hand_tracking import HandTracking
 from sound_manager import SoundManager
+from shape_match import ShapeMatcher 
+from gestures import HandGesture
+#from accuracy import get_cookie_contour, get_rotated_points, compute_accuracy
 
+hand_gesture = HandGesture()
 # กำหนดค่าพื้นฐาน
 WIDTH, HEIGHT = 1200, 900
 BLACK = (0, 0, 0)
@@ -100,7 +104,7 @@ while running:
         screen.blit(title_text, (WIDTH // 2 - title_text.get_width() // 2,
                                  HEIGHT // 4 - title_text.get_height() // 2))
 
-    # หน้าเกมกำลังนับถอยหลัง
+    # หน้าเกมกำลังนับถอยหลังและเล่นเกม
     if countdown:
         countdown_text = font.render(str(countdown_time), True, RED)
         screen.blit(countdown_text, (WIDTH // 2 - countdown_text.get_width() // 2,
@@ -147,6 +151,15 @@ while running:
                 # แสดงผลลงหน้าจอ
                 screen.blit(base_surface, (0, 0))
 
+                # คำนวณความแม่นยำของเส้นที่วาดเทียบกับเส้นลายบนคุกกี้
+                accuracy = ShapeMatcher.match_edges(drawing_layer, cookie_image)
+                if accuracy is not None:
+                    accuracy_text = font.render(f"Accuracy: {accuracy:.2f}%", True, RED)
+                else:
+                    accuracy_text = font.render("Accuracy: N/A", True, RED)
+                # แสดงผลที่มุมบนซ้ายของหน้าจอ
+                screen.blit(accuracy_text, (WIDTH - accuracy_text.get_width() - 20, 20))  # 20px ห่างจากขอบขวา
+
             # จับเวลาเริ่มเกมและเล่นเพลงในเกม
             if game_start_time is None:
                 game_start_time = pygame.time.get_ticks()
@@ -170,6 +183,7 @@ while running:
                                          HEIGHT // 2 - title_text.get_height() // 2))
                 if pygame.time.get_ticks() - game_over_time >= 2000:
                     # รีเซ็ตสถานะเกม
+                    drawing_app.reset()
                     main_menu = True
                     difficulty_selected = False
                     start_game_page = False
@@ -184,12 +198,14 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-            
+
+        # กด r เพื่อลบเส้นที่วาด
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_r:
                 drawing_app.reset()
+            # กด ESC เพื่อออกจากเกม
             elif event.key == pygame.K_ESCAPE:
-                running = False  
+                running = False
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_x, mouse_y = pygame.mouse.get_pos()
