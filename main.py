@@ -1,3 +1,6 @@
+# main.py
+
+
 import pygame
 import sys
 import time
@@ -111,11 +114,14 @@ while running:
         countdown_text = font.render(str(countdown_time), True, RED)
         screen.blit(countdown_text, (WIDTH // 2 - countdown_text.get_width() // 2,
                                      HEIGHT // 2 - countdown_text.get_height() // 2))
+        # เวลา 3 2 1
         if time.time() - countdown_start >= 1 and countdown_time > 0:
             countdown_time -= 1
             countdown_start = time.time()
+
+        # เมื่อหมดนับถอยหลัง
         if countdown_time == 0:
-            # เมื่อหมดนับถอยหลัง ให้เริ่มเกมจริง
+            # ให้เริ่มเกมจริง
             start_game_page = False
 
             # ดึงภาพจาก Hand Tracking แล้วปรับขนาดให้เต็มหน้าจอ
