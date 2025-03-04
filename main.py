@@ -221,7 +221,6 @@ while running:
                     cookie_image = None
                     game_over_time = None
                     sound_manager.play_bg_music()
-
     # จับ event
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
