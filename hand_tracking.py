@@ -40,17 +40,17 @@ class HandTracking:
                 continue
             
             frame = cv2.flip(frame, 1)  # พลิกภาพเพื่อให้สอดคล้องกับกระจก
-            rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            results = self.hands.process(rgb_frame)
+            rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB) #BGR -> RGB
+            results = self.hands.process(rgb_frame) #ตรวจจับมือจากภาพที่แปลงแล้ว
 
             self.hand_positions = []  # เคลียร์ค่าเดิมทุกเฟรม
             self.all_hand_landmarks = []  # เคลียร์ค่าจุดมือทั้งหมด
 
-            if results.multi_hand_landmarks:
+            if results.multi_hand_landmarks: #ถ้าเจอมือ
                 for hand_landmarks in results.multi_hand_landmarks:
-                    self.mp_drawing.draw_landmarks(frame, hand_landmarks, self.mp_hands.HAND_CONNECTIONS)
+                    self.mp_drawing.draw_landmarks(frame, hand_landmarks, self.mp_hands.HAND_CONNECTIONS) #วาดตัวtrackมือ
 
-                    # เก็บพิกัดทั้งหมด 21 จุดของมือ
+                    # เก็บพิกัดทั้งหมด 21 จุด 
                     hand_points = []
                     h, w, _ = frame.shape
                     for landmark in hand_landmarks.landmark:
@@ -67,10 +67,10 @@ class HandTracking:
                     if not (0 <= index_finger_tip.x <= 1 and 0 <= index_finger_tip.y <= 1):
                         continue  # ข้ามไปถ้าค่าผิดปกติ
 
-                    cx, cy = int(index_finger_tip.x * w), int(index_finger_tip.y * h)
+                    cx, cy = int(index_finger_tip.x * w), int(index_finger_tip.y * h) #แปลงพิกัดเปนpixel(ให้ตรงกับขนาดจริงบนจอ)
                     self.smooth_positions.append((cx, cy))
 
-                    # คำนวณค่าเฉลี่ยของพิกัดใน queue ที่เก็บไว้ (สำหรับทำให้การเคลื่อนไหวนุ่มนวล)
+                    # คำนวณ avg ของพิกัด
                     if len(self.smooth_positions) > 0:
                         avg_x = int(np.mean([pos[0] for pos in self.smooth_positions]))
                         avg_y = int(np.mean([pos[1] for pos in self.smooth_positions]))
@@ -92,7 +92,7 @@ class HandTracking:
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
 
             # แปลงภาพ OpenCV เป็น Pygame Surface
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB) 
             frame = cv2.resize(frame, (300, 200))
             self.frame_surface = pygame.image.frombuffer(frame.tobytes(), frame.shape[1::-1], "RGB")
 
@@ -108,12 +108,12 @@ class HandTracking:
         """
         return self.hand_positions
         
-    def get_all_hand_landmarks(self):
+    def get_all_hand_landmarks(self): 
         """
         คืนค่าพิกัดทั้ง 21 จุดของมือที่ตรวจจับได้
         """
         return self.all_hand_landmarks
 
-    def stop(self):
+    def stop(self): #
         self.running = False
         self.cap.release()
