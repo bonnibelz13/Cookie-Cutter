@@ -21,7 +21,7 @@ class DrawingApp:
                 x, y = hand_position
                 # ถ้ามีตำแหน่งก่อนหน้า ให้วาดเส้นจากก่อนหน้ามายังตำแหน่งปัจจุบัน
                 if self.prev_position:
-                    pygame.draw.line(self.drawing_layer, (255, 0, 0), self.prev_position, (x, y), 5)
+                    pygame.draw.line(self.drawing_layer, (255, 0, 0), self.prev_position, (x, y), 12)
                 self.prev_position = (x, y)
                 self.positions.append((x, y))
 
