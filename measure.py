@@ -164,14 +164,31 @@ class ShapeMeasure:
             cv2.imwrite('debug_drawing_sim.png', drawing_binary)
             cv2.imwrite('debug_template_sim.png', template_binary)
             
-            # Calculate structural similarity
-            score, _ = ssim(drawing_binary, template_binary, full=True, data_range=255)
+            # Calculate structural SSIM similarity
+            ssim_score, _ = ssim(drawing_binary, template_binary, full=True, data_range=255)
+            ssim_similarity = max(0, ssim_score * 100)
+
+            # Convert binary images to contours for matchShapes
+            contours_drawing, _ = cv2.findContours(drawing_binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            contours_template, _ = cv2.findContours(template_binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            if contours_drawing and contours_template:
+            # ใช้ contour ที่ใหญ่ที่สุด (assumption: รูปหลักอยู่ใน contour ที่ใหญ่ที่สุด)
+                drawing_contour = max(contours_drawing, key=cv2.contourArea)
+                template_contour = max(contours_template, key=cv2.contourArea)
+                
+                # Calculate shape similarity using matchShapes (0 = identical, higher = more different)
+                shape_score = cv2.matchShapes(drawing_contour, template_contour, cv2.CONTOURS_MATCH_I1, 0.0)
+                shape_similarity = max(0, 100 - (shape_score * 100))  # Scale to 0-100
             
-            # Convert to percentage
-            similarity = max(0, score * 100)
-            print(f"Similarity: {similarity:.2f}%")
-            
-            return similarity
+                # Final similarity score (weighted)
+                final_similarity = (ssim_similarity * 0.6) + (shape_similarity * 0.4)  # Adjust weights as needed
+                print(f"SSIM similarity: {ssim_similarity:.2f}%")
+                print(f"Shape similarity: {shape_similarity:.2f}%")
+                print(f"Final similarity: {final_similarity:.2f}%")
+                return final_similarity
+            else:
+                print("No contours found for similarity comparison")
+                return 0.0
         except Exception as e:
             print(f"Error in calculate_similarity: {e}")
             return 0.0
